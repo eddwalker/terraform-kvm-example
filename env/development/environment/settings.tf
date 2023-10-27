@@ -9,7 +9,7 @@ locals {
 
     user_pubkeys         = [ "key1", "key2", ".." ]
 
-    os_image_src         = "https://cloud-images.ubuntu.com/jammy/20230828/jammy-server-cloudimg-amd64.img"
+    os_image_src         = "https://cloud-images.ubuntu.com/jammy/20230929/jammy-server-cloudimg-amd64.img"
     os_image_dst         = "/opt/terraform/image_cache/ubuntu-22.04-server-cloudimg-amd64.qcow2"
     os_image_format      = "qcow2"
     os_image_sha256sum   = "" # empty value means skip checksum verify
