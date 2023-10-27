@@ -33,14 +33,11 @@ then
     printf "%s\n" "file already downloaded"
 else
     printf "%s\n" "start downloading"
-    printf "%s\n" "curl -C - --retry 4 -o $DST $SRC"
     set +e
     out="$(curl -C - --fail --retry 4 -o "$DST" "$SRC")"
     code=$?
     set -e
 fi
-
-echo "exit_code: $code"
 
 if [[ $code -ne 0 ]]
 then

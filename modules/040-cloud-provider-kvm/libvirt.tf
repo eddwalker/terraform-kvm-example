@@ -54,12 +54,14 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
   network_config = templatefile("${path.module}/templates/network_config.cfg", {
   })
   user_data = templatefile("${path.module}/templates/cloud_init.cfg", {
-    VM_HOST_NAME     = "${each.value.host_name}"
-    VM_HOST_FULLNAME = "${each.value.host_name}.${var.settings.net_domain}"
-    VM_USER_NAME     = var.settings.user_name
-    VM_USER_PUBKEYS  = var.settings.user_pubkeys
-    VM_APT_UPDATE    = var.settings.apt_update
-    VM_APT_UPGRADE   = var.settings.apt_upgrade
+    VM_HOST_NAME      = "${each.value.host_name}"
+    VM_HOST_FULLNAME  = "${each.value.host_name}.${var.settings.net_domain}"
+    VM_USER_NAME      = var.settings.user_name
+    VM_USER_PASS      = var.settings.user_pass
+    VM_USER_PASS_LOCK = var.settings.user_pass_lock
+    VM_USER_PUBKEYS   = var.settings.user_pubkeys
+    VM_APT_UPDATE     = var.settings.apt_update
+    VM_APT_UPGRADE    = var.settings.apt_upgrade
   })
 }
 
@@ -93,7 +95,8 @@ resource "libvirt_domain" "domain" {
     network_id     = libvirt_network.vm_public_network.id
     network_name   = libvirt_network.vm_public_network.name
     hostname       = each.value.host_name
-    wait_for_lease = true  #  makes apply fail save
+    # wait_for_lease makes apply fail save
+    wait_for_lease = true
   }
 
   console {
@@ -181,23 +184,26 @@ output "values" {
     _libvirt_inherited_filefetch_id      = var.file_fetch.null_resource_file_fetch.id
     _net_cidr_from_settings              = var.settings.net_cidr
     _path_module                         = path.module
-    "random_string__vm-name"              = random_string.vm-name
-    "libvirt_pool__ubuntu"                = libvirt_pool.ubuntu
-    "libvirt_volume__os_image_ubuntu"     = libvirt_volume.os_image_ubuntu
-    "libvirt_volume__ubuntu_qcow2"        = libvirt_volume.ubuntu_qcow2
-    "libvirt_network__vm_public_network"  = libvirt_network.vm_public_network
-    "libvirt_cloudinit_disk__cloudinit"   = libvirt_cloudinit_disk.cloudinit
-    "libvirt_domain__domain"              = libvirt_domain.domain
-
-#    x_test                              = [ for ip in libvirt_domain.domain[*].controller_0.network_interface[*].addresses[0]  : "${ip}" ]
-#    x_test2                             = flatten([ for name in keys(libvirt_domain.domain) :
-#                                               {
-#                                                 object=name
-#                                                 type=var.settings.vms[name].type
-#					         host_name=var.settings.vms[name].host_name
-#                                                 addresses=join("", libvirt_domain.domain[name].network_interface[*].addresses[0])
-#					       }
-#					    ])
-
+    "random_string__vm-name"             = random_string.vm-name
+    "libvirt_pool__ubuntu"               = libvirt_pool.ubuntu
+    "libvirt_volume__os_image_ubuntu"    = libvirt_volume.os_image_ubuntu
+    "libvirt_volume__ubuntu_qcow2"       = libvirt_volume.ubuntu_qcow2
+    "libvirt_network__vm_public_network" = libvirt_network.vm_public_network
+    "libvirt_cloudinit_disk__cloudinit"  = libvirt_cloudinit_disk.cloudinit
+    "libvirt_domain__domain"             = libvirt_domain.domain
+    "x_list_virtual_machines"            = [
+       for name in keys(libvirt_domain.domain) :
+       join(""
+         , libvirt_domain.domain[name].network_interface[*].mac
+         , [ " " ]
+         , [ var.settings.vms[name].host_name ]
+         , [ " => " ]
+         , [ "ssh" ]
+         , [ " " ]
+         , [ var.settings.user_name ]
+         , [ "@" ]
+         , libvirt_domain.domain[name].network_interface[*].addresses[0]
+       )
+    ]
   }
 }

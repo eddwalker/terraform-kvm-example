@@ -32,9 +32,14 @@ locals {
       pool_dir             = "/opt/terraform/kubernetes1-images"
       pool_name            = "vm_pool"
       #host_prefix          = "vm"
-      apt_update           = false
+      # The latest version of Libvirt requires that the Guemu-Guest-Agent installs as soon as possible
+      # after setup VM or failing with an error, like: couldn't retrieve IP address of domain id: ..
+      apt_update           = true
       apt_upgrade          = false
       user_name            = "developer"
+      # below password 'pass' created with: mkpasswd --method=SHA-512 --rounds=4096
+      user_pass            = "$6$rounds=4096$4jmONvw5ebmhmRFd$JdhstXO6qRIYtrxikhnnIUbMc9Bv3Zr1e/B8W4uvuutrNc8ldgjXgEZs35gkQ3rTS4ui3.fPFeLKtKQhvrZxG1"
+      user_pass_lock       = false    # true will disable password login
       user_pubkeys         = ["ssh-rsa ... description", ]
   }
 }
